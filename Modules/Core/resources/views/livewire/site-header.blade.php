@@ -8,45 +8,41 @@
         <div class="header-inner">
 
             {{-- ─── Logo ────────────────────────────────────────────────── --}}
-            @php
-                $layout   = $this->layout;
-                $settings = $this->settings;
-                $logoRow  = collect($layout?->rows ?? [])->firstWhere('type', 'logo');
-                $logoMedia = $layout?->getFirstMediaUrl('logo');
-                $ctaRow   = collect($layout?->rows ?? [])->firstWhere('type', 'cta_button');
-            @endphp
-
             <a href="{{ route('home') }}" class="header-logo" aria-label="{{ $settings->site_name }}">
-                @if ($logoMedia)
+                @if ($logoUrl)
+                    {{-- Image logo from MediaLibrary --}}
                     <img
-                        src="{{ $logoMedia }}"
-                        alt="{{ $logoRow['data']['alt'] ?? $settings->site_name }}"
-                        width="{{ $logoRow['data']['width'] ?? 140 }}"
-                        height="40"
+                        src="{{ $logoUrl }}"
+                        alt="{{ $logoAlt ?? $settings->site_name }}"
                         class="header-logo__img"
+                        width="140"
+                        height="40"
                     >
                 @elseif ($settings->logo_type === 'text' && $settings->logo_text)
+                    {{-- Custom text/wordmark --}}
                     <span class="header-logo__text">{{ $settings->logo_text }}</span>
                 @else
+                    {{-- Fallback: site name --}}
                     <span class="header-logo__text">{{ $settings->site_name }}</span>
                 @endif
             </a>
 
             {{-- ─── Desktop navigation ────────────────────────────────── --}}
-            @if ($this->primaryMenu && !empty($this->primaryMenu->items))
+            @if ($primaryMenu && !empty($primaryMenu->items))
                 <nav aria-label="{{ __('Primary navigation') }}" class="header-nav" id="header-desktop-nav">
                     <ul role="list" class="header-nav__list">
-                        @foreach ($this->primaryMenu->items as $item)
+                        @foreach ($primaryMenu->items as $item)
                             @php
-                                $label = is_array($item['label'])
+                                $label = is_array($item['label'] ?? null)
                                     ? ($item['label'][app()->getLocale()] ?? $item['label']['en'] ?? reset($item['label']))
-                                    : $item['label'];
+                                    : ($item['label'] ?? '');
+                                $url   = $item['url'] ?? '#';
+                                $isActive = $url !== '#' && request()->is(ltrim($url, '/'));
                             @endphp
                             <li>
-                                <a
-                                    href="{{ $item['url'] ?? '#' }}"
-                                    class="nav-link {{ request()->is(ltrim($item['url'] ?? '~', '/')) ? 'active' : '' }}"
-                                >{{ $label }}</a>
+                                <a href="{{ $url }}" class="nav-link {{ $isActive ? 'active' : '' }}">
+                                    {{ $label }}
+                                </a>
                             </li>
                         @endforeach
                     </ul>
@@ -89,7 +85,7 @@
                                     href="{{ route('lang.switch', $lang) }}"
                                     class="lang-switcher__option {{ app()->getLocale() === $lang ? 'lang-switcher__option--active' : '' }}"
                                     role="option"
-                                    aria-selected="{{ app()->getLocale() === $lang ? 'true' : 'false' }}"
+                                    :aria-selected="'{{ app()->getLocale() === $lang ? 'true' : 'false' }}'"
                                 >
                                     @switch($lang)
                                         @case('tr') 🇹🇷 @break
@@ -99,7 +95,7 @@
                                         @case('ar') 🇸🇦 @break
                                         @case('ru') 🇷🇺 @break
                                         @case('es') 🇪🇸 @break
-                                        @default
+                                        @default {{ $lang }}
                                     @endswitch
                                     {{ strtoupper($lang) }}
                                 </a>
@@ -124,7 +120,7 @@
                     id="hamburger-btn"
                     aria-label="{{ __('Toggle navigation') }}"
                     :aria-expanded="mobileOpen"
-                    :aria-controls="'mobile-nav'"
+                    aria-controls="mobile-nav"
                 >
                     <span class="hamburger__bar" :style="mobileOpen ? 'transform:rotate(45deg) translate(5px,6px)' : ''"></span>
                     <span class="hamburger__bar" :style="mobileOpen ? 'opacity:0; transform:scaleX(0)' : ''"></span>
@@ -160,12 +156,12 @@
         </div>
 
         <nav aria-label="{{ __('Mobile navigation') }}" class="mobile-nav__links">
-            @if ($this->primaryMenu && !empty($this->primaryMenu->items))
-                @foreach ($this->primaryMenu->items as $item)
+            @if ($primaryMenu && !empty($primaryMenu->items))
+                @foreach ($primaryMenu->items as $item)
                     @php
-                        $label = is_array($item['label'])
+                        $label = is_array($item['label'] ?? null)
                             ? ($item['label'][app()->getLocale()] ?? $item['label']['en'] ?? reset($item['label']))
-                            : $item['label'];
+                            : ($item['label'] ?? '');
                     @endphp
                     <a href="{{ $item['url'] ?? '#' }}" class="mobile-nav__link" @click="mobileOpen = false">
                         {{ $label }}

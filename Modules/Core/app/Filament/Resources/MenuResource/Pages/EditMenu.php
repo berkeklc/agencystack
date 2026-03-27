@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Modules\Core\App\Filament\Resources\LayoutResource\Pages;
+namespace Modules\Core\App\Filament\Resources\MenuResource\Pages;
 
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Modules\Core\App\Filament\Resources\LayoutResource;
+use Modules\Core\App\Filament\Resources\MenuResource;
 
-final class EditLayout extends EditRecord
+final class EditMenu extends EditRecord
 {
-    protected static string $resource = LayoutResource::class;
+    protected static string $resource = MenuResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -22,5 +22,10 @@ final class EditLayout extends EditRecord
                 ->color('gray'),
             Actions\DeleteAction::make(),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

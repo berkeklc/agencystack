@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Modules\Team\App\Livewire\TeamIndex;
 
-// Module routes are handled via Filament admin panel.
-// Public frontend routes will be added here when needed.
+Route::prefix('team')->name('team.')->group(function (): void {
+    Route::get('/', TeamIndex::class)->name('index');
+});

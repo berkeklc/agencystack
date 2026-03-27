@@ -21,6 +21,8 @@ final class MenuCategoryResource extends Resource
 
     protected static ?string $navigationGroup = 'QR Menu';
 
+    protected static ?string $navigationLabel = 'Menu Categories';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -28,27 +30,56 @@ final class MenuCategoryResource extends Resource
         return $form->schema([
             Forms\Components\Select::make('restaurant_id')
                 ->label('Restaurant')
-                ->options(Restaurant::pluck('name', 'id'))
+                ->options(self::restaurantOptions())
                 ->required()
-                ->searchable(),
+                ->searchable()
+                ->default(self::firstRestaurantId())
+                ->createOptionForm([
+                    Forms\Components\TextInput::make('name')
+                        ->label('Restaurant name')
+                        ->required(),
+                    Forms\Components\TextInput::make('slug')
+                        ->label('Slug')
+                        ->required(),
+                ])
+                ->createOptionUsing(function (array $data): int {
+                    $restaurant = Restaurant::create([
+                        'name' => ['tr' => $data['name'], 'en' => $data['name']],
+                        'slug' => $data['slug'],
+                        'is_active' => true,
+                    ]);
+
+                    return $restaurant->id;
+                })
+                ->helperText(Restaurant::count() === 0
+                    ? '⚠ No restaurants yet — create one first under QR Menu → Restaurants.'
+                    : null
+                ),
 
             Forms\Components\TextInput::make('name')
+                ->label('Category name')
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->helperText('Translatable — save and edit to add other languages.'),
 
             Forms\Components\Textarea::make('description')
-                ->rows(3)
+                ->label('Description')
+                ->rows(2)
                 ->columnSpanFull(),
 
-            Forms\Components\FileUpload::make('image')
+            Forms\Components\SpatieMediaLibraryFileUpload::make('image')
+                ->collection('image')
+                ->label('Category image')
                 ->image()
                 ->imageEditor(),
 
             Forms\Components\TextInput::make('sort_order')
+                ->label('Sort order')
                 ->numeric()
                 ->default(0),
 
             Forms\Components\Toggle::make('is_active')
+                ->label('Active')
                 ->default(true),
         ]);
     }
@@ -57,21 +88,40 @@ final class MenuCategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image'),
-                Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('restaurant.name'),
+                Tables\Columns\SpatieMediaLibraryImageColumn::make('image')
+                    ->collection('image')
+                    ->label('Image')
+                    ->circular(),
+
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Category')
+                    ->searchable()
+                    ->formatStateUsing(fn ($record) => $record->getTranslation('name', app()->getLocale())),
+
+                Tables\Columns\TextColumn::make('restaurant.name')
+                    ->label('Restaurant')
+                    ->formatStateUsing(fn ($record) => $record->restaurant?->getTranslation('name', app()->getLocale()))
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('items_count')
                     ->counts('items')
-                    ->label('Items'),
-                Tables\Columns\TextColumn::make('sort_order')->sortable(),
-                Tables\Columns\IconColumn::make('is_active')->boolean(),
+                    ->label('Items')
+                    ->badge(),
+
+                Tables\Columns\TextColumn::make('sort_order')
+                    ->label('Order')
+                    ->sortable(),
+
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label('Active')
+                    ->boolean(),
             ])
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
             ->filters([
                 Tables\Filters\SelectFilter::make('restaurant_id')
                     ->label('Restaurant')
-                    ->relationship('restaurant', 'name'),
+                    ->options(self::restaurantOptions()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -86,5 +136,22 @@ final class MenuCategoryResource extends Resource
             'create' => Pages\CreateMenuCategory::route('/create'),
             'edit' => Pages\EditMenuCategory::route('/{record}/edit'),
         ];
+    }
+
+    /** @return array<int|string, string> */
+    private static function restaurantOptions(): array
+    {
+        $locale = app()->getLocale();
+
+        return Restaurant::all()
+            ->mapWithKeys(fn (Restaurant $r) => [
+                $r->id => $r->getTranslation('name', $locale, useFallbackLocale: true),
+            ])
+            ->toArray();
+    }
+
+    private static function firstRestaurantId(): ?int
+    {
+        return Restaurant::value('id');
     }
 }

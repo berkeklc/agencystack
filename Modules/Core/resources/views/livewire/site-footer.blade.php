@@ -1,25 +1,15 @@
 <footer class="site-footer" role="contentinfo">
-    @php
-        $layout    = $this->layout;
-        $settings  = $this->settings;
-        $rows      = $layout?->rows ?? [];
-        $logoRow   = collect($rows)->firstWhere('type', 'logo');
-        $logoMedia = $layout?->getFirstMediaUrl('logo');
-        $textRow   = collect($rows)->firstWhere('type', 'text_block');
-        $socialLinks = $settings->social_links ?? [];
-    @endphp
-
     <div class="container-site">
         <div class="footer-top">
 
             {{-- Brand column --}}
             <div class="footer-brand">
                 <a href="{{ route('home') }}" style="text-decoration:none; display:inline-block; margin-bottom:1.25rem;">
-                    @if ($logoMedia)
+                    @if ($logoUrl)
                         <img
-                            src="{{ $logoMedia }}"
-                            alt="{{ $logoRow['data']['alt'] ?? $settings->site_name }}"
-                            width="{{ $logoRow['data']['width'] ?? 120 }}"
+                            src="{{ $logoUrl }}"
+                            alt="{{ $settings->site_name }}"
+                            width="120"
                             height="36"
                             style="height:36px; width:auto; filter:brightness(0) invert(1); opacity:0.9;"
                         >
@@ -34,7 +24,6 @@
                     <p class="footer-tagline">{{ $settings->site_tagline }}</p>
                 @endif
 
-                {{-- Social icons --}}
                 @if (!empty($socialLinks))
                     <div class="footer-social">
                         @foreach ($socialLinks as $network => $url)
@@ -43,7 +32,7 @@
                                     href="{{ $url }}"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    aria-label="{{ ucfirst($network) }}"
+                                    aria-label="{{ ucfirst((string) $network) }}"
                                     class="footer-social__icon"
                                 >
                                     @include('core::partials.social-icon', ['network' => $network])
@@ -55,15 +44,15 @@
             </div>
 
             {{-- Footer nav --}}
-            @if ($this->footerMenu && !empty($this->footerMenu->items))
+            @if ($footerMenu && !empty($footerMenu->items))
                 <div class="footer-col">
                     <h3 class="footer-col__heading">{{ __('Navigation') }}</h3>
                     <ul role="list" class="footer-col__list">
-                        @foreach ($this->footerMenu->items as $item)
+                        @foreach ($footerMenu->items as $item)
                             @php
-                                $label = is_array($item['label'])
+                                $label = is_array($item['label'] ?? null)
                                     ? ($item['label'][app()->getLocale()] ?? $item['label']['en'] ?? reset($item['label']))
-                                    : $item['label'];
+                                    : ($item['label'] ?? '');
                             @endphp
                             <li>
                                 <a href="{{ $item['url'] ?? '#' }}" class="footer-col__link">{{ $label }}</a>

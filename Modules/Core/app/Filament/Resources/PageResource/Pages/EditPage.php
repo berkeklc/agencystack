@@ -15,6 +15,13 @@ final class EditPage extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('preview')
+                ->label('Preview page')
+                ->icon('heroicon-o-arrow-top-right-on-square')
+                ->url(fn () => $this->record->is_home
+                    ? config('app.url')
+                    : config('app.url').'/'.$this->record->slug, true)
+                ->color('gray'),
             Actions\DeleteAction::make(),
         ];
     }

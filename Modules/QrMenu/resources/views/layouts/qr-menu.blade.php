@@ -16,7 +16,7 @@
     @livewireStyles
 </head>
 <body class="h-full bg-gray-50 font-inter antialiased">
-    {{ $slot }}
+    @yield('content'){{ $slot ?? '' }}
 
     @livewireScripts
     @vite(['resources/js/app.js'])

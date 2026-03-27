@@ -4,37 +4,38 @@ declare(strict_types=1);
 
 namespace Modules\Core\App\Livewire;
 
-use Livewire\Attributes\Computed;
+use Illuminate\View\View;
 use Livewire\Component;
+use Modules\Core\App\Enums\LayoutType;
 use Modules\Core\App\Models\Layout;
 use Modules\Core\App\Models\Menu;
-use Modules\Core\App\Enums\LayoutType;
 use Modules\Core\App\Settings\GeneralSettings;
 
 final class SiteHeader extends Component
 {
-    #[Computed]
-    public function layout(): ?Layout
+    public function render(): View
     {
-        return Layout::where('type', LayoutType::Header->value)
-            ->where('is_active', true)
-            ->first();
-    }
+        // Always fetch fresh — no Livewire computed caching so admin changes reflect immediately.
+        $layout = Layout::where('type', LayoutType::Header->value)->where('is_active', true)->first();
+        $settings = app(GeneralSettings::class);
+        $primaryMenu = Menu::where('location', 'primary')->first();
 
-    #[Computed]
-    public function settings(): GeneralSettings
-    {
-        return app(GeneralSettings::class);
-    }
+        // Resolve logo: prefer MediaLibrary image, then text logo, then site name.
+        $logoMedia = $layout?->getFirstMediaUrl('logo');
+        $logoUrl = $logoMedia ?: null;
+        $logoAlt = $logoUrl
+            ? (collect($layout?->rows ?? [])->firstWhere('type', 'logo')['data']['alt'] ?? $settings->site_name)
+            : null;
 
-    #[Computed]
-    public function primaryMenu(): ?Menu
-    {
-        return Menu::where('location', 'primary')->first();
-    }
+        $ctaRow = collect($layout?->rows ?? [])->firstWhere('type', 'cta_button');
 
-    public function render(): \Illuminate\View\View
-    {
-        return view('core::livewire.site-header');
+        return view('core::livewire.site-header', compact(
+            'layout',
+            'settings',
+            'primaryMenu',
+            'logoUrl',
+            'logoAlt',
+            'ctaRow',
+        ));
     }
 }

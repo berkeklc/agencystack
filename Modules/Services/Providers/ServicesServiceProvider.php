@@ -6,6 +6,9 @@ namespace Modules\Services\Providers;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
+use Modules\Services\App\Livewire\ServiceDetail;
+use Modules\Services\App\Livewire\ServicesIndex;
 
 final class ServicesServiceProvider extends ServiceProvider
 {
@@ -23,5 +26,8 @@ final class ServicesServiceProvider extends ServiceProvider
 
         Route::middleware('web')
             ->group(module_path($this->moduleName, 'routes/web.php'));
+
+        Livewire::component('services::services-index', ServicesIndex::class);
+        Livewire::component('services::service-detail', ServiceDetail::class);
     }
 }

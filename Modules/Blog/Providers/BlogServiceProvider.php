@@ -6,6 +6,9 @@ namespace Modules\Blog\Providers;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
+use Modules\Blog\App\Livewire\BlogIndex;
+use Modules\Blog\App\Livewire\BlogPost;
 
 final class BlogServiceProvider extends ServiceProvider
 {
@@ -21,12 +24,13 @@ final class BlogServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->registerRoutes();
+        $this->registerLivewireComponents();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
     }
 
     private function registerTranslations(): void
     {
-        $langPath = resource_path('lang/modules/' . $this->moduleNameLower);
+        $langPath = resource_path('lang/modules/'.$this->moduleNameLower);
         $sourcePath = module_path($this->moduleName, 'resources/lang');
 
         $this->loadTranslationsFrom(is_dir($langPath) ? $langPath : $sourcePath, $this->moduleNameLower);
@@ -47,5 +51,11 @@ final class BlogServiceProvider extends ServiceProvider
     {
         Route::middleware('web')
             ->group(module_path($this->moduleName, 'routes/web.php'));
+    }
+
+    private function registerLivewireComponents(): void
+    {
+        Livewire::component('blog::blog-index', BlogIndex::class);
+        Livewire::component('blog::blog-post', BlogPost::class);
     }
 }

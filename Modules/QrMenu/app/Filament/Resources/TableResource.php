@@ -6,9 +6,11 @@ namespace Modules\QrMenu\App\Filament\Resources;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Modules\QrMenu\App\Actions\GenerateTableQrCode;
 use Modules\QrMenu\App\Filament\Resources\TableResource\Pages;
 use Modules\QrMenu\App\Models\MenuTable;
@@ -31,9 +33,10 @@ final class TableResource extends Resource
         return $form->schema([
             Forms\Components\Select::make('restaurant_id')
                 ->label('Restaurant')
-                ->options(Restaurant::pluck('name', 'id'))
+                ->options(self::restaurantOptions())
                 ->required()
-                ->searchable(),
+                ->searchable()
+                ->default(Restaurant::value('id')),
 
             Forms\Components\TextInput::make('name')
                 ->label('Table Name / Number')
@@ -49,7 +52,8 @@ final class TableResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('restaurant.name'),
+                Tables\Columns\TextColumn::make('restaurant.name')
+                    ->formatStateUsing(fn ($record) => $record->restaurant?->getTranslation('name', app()->getLocale())),
                 Tables\Columns\IconColumn::make('qr_code_path')
                     ->icon(fn (?string $state): string => $state ? 'heroicon-o-check-circle' : 'heroicon-o-clock')
                     ->color(fn (?string $state): string => $state ? 'success' : 'gray')
@@ -66,11 +70,11 @@ final class TableResource extends Resource
                     ->label('Generate QR')
                     ->icon('heroicon-o-qr-code')
                     ->color('success')
-                    ->action(function (MenuTable $record, GenerateTableQrCode $action): void {
-                        $url = $action->execute($record);
-                        \Filament\Notifications\Notification::make()
+                    ->action(function (MenuTable $record): void {
+                        $url = app(GenerateTableQrCode::class)->execute($record);
+                        Notification::make()
                             ->title('QR Code generated')
-                            ->body('QR Code saved to: ' . $url)
+                            ->body('QR Code saved to: '.$url)
                             ->success()
                             ->send();
                     }),
@@ -89,7 +93,7 @@ final class TableResource extends Resource
                 Tables\Actions\BulkAction::make('generate_all_qr')
                     ->label('Generate QR Codes')
                     ->icon('heroicon-o-qr-code')
-                    ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                    ->action(function (Collection $records): void {
                         $generator = app(GenerateTableQrCode::class);
                         $records->each(fn (MenuTable $table) => $generator->execute($table));
                     }),
@@ -103,5 +107,17 @@ final class TableResource extends Resource
             'create' => Pages\CreateTable::route('/create'),
             'edit' => Pages\EditTable::route('/{record}/edit'),
         ];
+    }
+
+    /** @return array<int|string, string> */
+    private static function restaurantOptions(): array
+    {
+        $locale = app()->getLocale();
+
+        return Restaurant::all()
+            ->mapWithKeys(fn (Restaurant $r) => [
+                $r->id => $r->getTranslation('name', $locale, useFallbackLocale: true),
+            ])
+            ->toArray();
     }
 }

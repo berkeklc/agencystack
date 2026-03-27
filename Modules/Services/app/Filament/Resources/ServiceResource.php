@@ -68,11 +68,10 @@ final class ServiceResource extends Resource
                             Forms\Components\FileUpload::make('featured_image')
                                 ->image()->imageEditor()->columnSpanFull(),
 
-                            Forms\Components\Repeater::make('features')
+                            Forms\Components\TagsInput::make('features')
                                 ->label('Service Features')
-                                ->schema([
-                                    Forms\Components\TextInput::make('feature')->required(),
-                                ])
+                                ->placeholder('Add a feature and press Enter…')
+                                ->helperText('e.g. "24/7 Support", "Free consultation"')
                                 ->columnSpanFull(),
                         ])
                         ->columns(2),

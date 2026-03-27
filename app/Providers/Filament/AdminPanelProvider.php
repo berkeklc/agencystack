@@ -19,12 +19,23 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Modules\Blog\App\Filament\Resources\PostResource;
+use Modules\Contact\App\Filament\Resources\ContactSubmissionResource;
 use Modules\Core\App\Filament\Pages\GeneralSettingsPage;
 use Modules\Core\App\Filament\Pages\MailSettingsPage;
 use Modules\Core\App\Filament\Pages\SeoSettingsPage;
 use Modules\Core\App\Filament\Resources\LayoutResource;
+use Modules\Core\App\Filament\Resources\MenuResource;
 use Modules\Core\App\Filament\Resources\PageResource;
 use Modules\Core\App\Filament\Resources\UserResource;
+use Modules\Meeting\App\Filament\Resources\AppointmentResource;
+use Modules\Portfolio\App\Filament\Resources\ProjectResource;
+use Modules\QrMenu\App\Filament\Resources\MenuCategoryResource;
+use Modules\QrMenu\App\Filament\Resources\MenuItemResource;
+use Modules\QrMenu\App\Filament\Resources\RestaurantResource;
+use Modules\QrMenu\App\Filament\Resources\TableResource;
+use Modules\Services\App\Filament\Resources\ServiceResource;
+use Modules\Team\App\Filament\Resources\TeamMemberResource;
 use Nwidart\Modules\Facades\Module;
 
 final class AdminPanelProvider extends PanelProvider
@@ -78,32 +89,34 @@ final class AdminPanelProvider extends PanelProvider
         $resources = [
             PageResource::class,
             LayoutResource::class,
+            MenuResource::class,
             UserResource::class,
         ];
 
         $moduleResources = [
             'QrMenu' => [
-                \Modules\QrMenu\App\Filament\Resources\MenuCategoryResource::class,
-                \Modules\QrMenu\App\Filament\Resources\MenuItemResource::class,
-                \Modules\QrMenu\App\Filament\Resources\TableResource::class,
+                RestaurantResource::class,
+                MenuCategoryResource::class,
+                MenuItemResource::class,
+                TableResource::class,
             ],
             'Blog' => [
-                \Modules\Blog\App\Filament\Resources\PostResource::class,
+                PostResource::class,
             ],
             'Services' => [
-                \Modules\Services\App\Filament\Resources\ServiceResource::class,
+                ServiceResource::class,
             ],
             'Portfolio' => [
-                \Modules\Portfolio\App\Filament\Resources\ProjectResource::class,
+                ProjectResource::class,
             ],
             'Team' => [
-                \Modules\Team\App\Filament\Resources\TeamMemberResource::class,
+                TeamMemberResource::class,
             ],
             'Contact' => [
-                \Modules\Contact\App\Filament\Resources\ContactSubmissionResource::class,
+                ContactSubmissionResource::class,
             ],
             'Meeting' => [
-                \Modules\Meeting\App\Filament\Resources\AppointmentResource::class,
+                AppointmentResource::class,
             ],
         ];
 
